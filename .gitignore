@@ -5,3 +5,12 @@ __pycache__/
 /staticfiles/
 /media/
 node_modules/
+
+# Local virtual environment
+.venv/
+
+# Per-user logs
+logs/
+
+# macOS
+.DS_Store
