@@ -115,7 +115,7 @@
 <div class="main-content">
     <h1>إدارة الطلاب</h1>
 
-    {% if students and students.exists %}
+    {% if students %}
     <!-- زر إنشاء طالب بدون رابط -->
     <div style="text-align: left; margin-bottom:12px;">
            <a href="{% url 'create_student' %}" class="button">إنشاء طالب جديد</a>
@@ -151,7 +151,7 @@
 
         <!-- عدد الطلاب -->
         <div class="total-count">
-            عدد الطلاب: {{ students.count }}
+            عدد الطلاب: {{ students|length }}
         </div>
     </div>
     {% else %}
