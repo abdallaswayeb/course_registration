@@ -19,4 +19,4 @@ class Student(models.Model):
 		db_table = 'auth_students'
 
 	def __str__(self):
-		return f"{self.first_name} {self.last_name} ({self.students_id})"
+		return f"{self.first_name} {self.last_name} ({self.student_id})"
