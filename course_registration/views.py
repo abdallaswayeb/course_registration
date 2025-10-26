@@ -110,7 +110,19 @@ def students_page(request):
 
         return redirect('students_page')
 
-    students = Student.objects.all()
+    # Show students from the auth_user table (non-staff, non-superuser users)
+    auth_users = User.objects.filter(is_staff=False, is_superuser=False).order_by('-date_joined')
+
+    # Normalize auth users to the shape the template expects (student_id, first_name, last_name, section)
+    students = []
+    for u in auth_users:
+        students.append({
+            'student_id': u.username,
+            'first_name': u.first_name or '',
+            'last_name': u.last_name or '',
+            'section': None,
+        })
+
     return render(request, 'students.html', {'students': students})
 
 
