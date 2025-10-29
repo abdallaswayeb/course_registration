@@ -85,6 +85,38 @@
     .print-btn { background: #10b981; }    /* أخضر */
     .actions { display: flex; justify-content: center; gap: 5px;  }
     .total-count { text-align:left; margin-top:10px; font-size:13px; color:#6b7280; }
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: calc(100vh - 150px);
+        color: #374151;
+        font-weight: 600;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .empty-state p {
+        font-size: 18px;
+        color: #374151;
+    }
+
+    .empty-state .button {
+        background: #10b981; /* نفس اللون القديم */
+        color: #fff;
+        padding: 10px 18px;
+        font-size: 15px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.3s ease;
+    }
+
+    .empty-state .button:hover {
+        background: #059669; /* درجة أغمق عند المرور */
+        transform: translateY(-2px);
+    }
 </style>
 </head>
 <body>
@@ -116,18 +148,45 @@
     <h1>إدارة الطلاب</h1>
 
     {% if students %}
-    <!-- زر إنشاء طالب بدون رابط -->
     <div style="text-align: left; margin-bottom:12px;">
-           <a href="{% url 'create_student' %}" class="button">إنشاء طالب جديد</a>
+        <a href="{% url 'add_student' %}">
+            <button class="button">
+                <i class="fa-solid fa-plus"></i> إنشاء طالب جديد
+            </button>
+        </a>
     </div>
 
     <div style="margin-top:10px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 3px 12px rgba(0,0,0,0.06)">
+       <form method="GET" style="margin-bottom: 20px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; background:#f3f4f6; padding:15px; border-radius:12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <input type="text" name="id_student" placeholder="رقم القيد" 
+                value="{{ request.GET.id_student }}" 
+                style="padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; outline:none; width:150px; transition:0.2s;">
+            
+            <input type="text" name="name" placeholder="اسم الطالب" 
+                value="{{ request.GET.name }}" 
+                style="padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; outline:none; width:200px; transition:0.2s;">
+            
+            <select name="section" style="padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; outline:none; transition:0.2s;">
+                <option value="">كل الأقسام</option>
+                {% for sec in sections %}
+                <option value="{{ sec.id }}" {% if request.GET.section == sec.id|add:'' %}selected{% endif %}>
+                    {{ sec.name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="button" style="background:#3b82f6; color:#fff; padding:9px 18px; border-radius:8px; border:none; cursor:pointer; font-weight:600; transition:0.2s; margin-top: 10px;">
+                فلتر
+            </button>
+        </form>
+
+
         <table>
             <thead>
                 <tr>
                     <th>#</th>
                     <th>رقم القيد</th>
-                    <th>الاسم واللقب</th>
+                    <th>الاسم</th>
                     <th>القسم</th>
                     <th style="text-align:center;">الإجراءات</th>
                 </tr>
@@ -136,11 +195,13 @@
                 {% for s in students %}
                 <tr>
                     <td>{{ forloop.counter }}</td>
-                    <td>{{ s.student_id }}</td>
-                    <td>{{ s.first_name }} {{ s.last_name }}</td>
-                        <td>{% if s.section %}{{ s.section.name }}{% else %}-{% endif %}</td>
+                    <td>{{ s.id_student }}</td>
+                    <td>{{ s.name }}</td>
+                    <td>{% if s.section %}{{ s.section.name }}{% else %}-{% endif %}</td>
                     <td class="actions">
-                        <button class="action-btn edit-btn" title="تعديل"><i class="fa-solid fa-pen-to-square"></i></button>
+                         <a href="{% url 'student_detail' s.id_student %}" class="action-btn edit-btn" title="تعديل">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
                         <button class="action-btn delete-btn" title="حذف"><i class="fa-solid fa-trash"></i></button>
                         <button class="action-btn print-btn" title="طباعة"><i class="fa-solid fa-print"></i></button>
                     </td>
@@ -149,14 +210,15 @@
             </tbody>
         </table>
 
-        <!-- عدد الطلاب -->
         <div class="total-count">
             عدد الطلاب: {{ students|length }}
         </div>
     </div>
     {% else %}
-    <p style="margin-top:24px; color:#374151; font-weight:600">لا يوجد طلاب حتى الآن.</p>
-        <a href="{% url 'create_student' %}" class="button">إنشاء طالب جديد</a>
+    <div class="empty-state">
+        <p>لا يوجد طلاب حتى الآن.</p>
+        <button class="button"><i class="fa-solid fa-plus"></i> إنشاء طالب جديد</button>
+    </div>
     {% endif %}
 </div>
 
