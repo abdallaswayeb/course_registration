@@ -3,7 +3,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>إدارة الاقسام</title>
+<title>إدارة الأقسام</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     body {
@@ -15,7 +15,6 @@
         overflow: hidden;
     }
 
-   
     header {
         position: fixed; top:0; left:0; right:0;
         height:65px; display:flex; align-items:center; justify-content:space-between;
@@ -24,7 +23,6 @@
     }
     .logo { display:flex; align-items:center; gap:10px; margin-left:15px; }
     .logo img { width:65px; height:65px; }
-    .logo h2 { font-size:22px; font-weight:700; color:#1d4ed8; }
 
     .user-info { display:flex; align-items:center; gap:12px; padding:5px 10px; border-radius:12px; background:#e0e7ff; }
     .user-info img { width:38px; height:38px; border-radius:50%; border:2px solid #1d4ed8; }
@@ -32,7 +30,6 @@
     .logout-btn { background:none; border:none; color:#dc2626; font-size:20px; cursor:pointer; transition:0.3s; margin-left:8px; }
     .logout-btn:hover { color:#b91c1c; }
 
-    
     .sidebar {
         position: fixed;
         top: 0;
@@ -51,7 +48,6 @@
     .sidebar a { text-decoration:none; color:#f0f0f0; width:100%; padding:12px 25px; display:flex; align-items:center; gap:10px; transition:all 0.3s ease; font-size:16px; font-weight:500; }
     .sidebar a i { font-size:17px; }
     .sidebar a:hover { background-color: rgba(255,255,255,0.15); padding-right:30px; border-radius:8px; }
-
     .sidebar a.active {
         background-color: rgba(255, 255, 255, 0.25);
         border-right: 4px solid #60a5fa;
@@ -69,26 +65,69 @@
         overflow-y: auto;
     }
     .main-content h1 { font-size:26px; font-weight:700; color:#1d4ed8; margin-bottom:20px;}
-    .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:25px; }
-    .card {
-        background:#ffffff; border-radius:12px; box-shadow:0 3px 12px rgba(0,0,0,0.08);
-        padding:25px; text-align:center; transition:transform 0.3s ease, box-shadow 0.3s ease; cursor:pointer;
+    table { width:100%; border-collapse:collapse; direction:rtl; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 3px 12px rgba(0,0,0,0.06); }
+    table th, table td { padding:10px; text-align:right; border-bottom:1px solid #e5e7eb; vertical-align: middle; }
+    table th { background:#f3f4f6; font-weight:600; color:#1d4ed8; }
+    table tbody tr:hover { background-color:#f9fafb; }
+
+    button.button { display:inline-block; background:#10b981; color:#fff; padding:8px 12px; border-radius:8px; border:none; font-weight:600; margin-bottom:12px; cursor: default; }
+
+    .action-btn {
+        border: none;
+        border-radius: 6px;
+        padding: 6px 10px;
+        color: #fff;
+        font-size: 14px;
+        cursor: default;
+        margin-left: 5px;
     }
-    .card:hover { transform:translateY(-5px); box-shadow:0 6px 20px rgba(0,0,0,0.12); }
-    .card i { font-size:40px; color:#2563eb; margin-bottom:10px; }
-    .card h2 { font-size:20px; font-weight:600; color:#2563eb; margin-bottom:10px; }
-    .card p { font-size:16px; font-weight:500; color:#555; }
+    .edit-btn { background: #3b82f6; }
+    .delete-btn { background: #ef4444; }
+    .print-btn { background: #10b981; }
+    .actions { display: flex; justify-content: center; gap: 5px; }
+    .total-count { text-align:left; margin-top:10px; font-size:13px; color:#6b7280; }
+
+    /* الحالة الفارغة */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: calc(100vh - 150px);
+        color: #374151;
+        font-weight: 600;
+        gap: 15px;
+        text-align: center;
+    }
+    .empty-state p {
+        font-size: 18px;
+        color: #374151;
+    }
+    .empty-state .button {
+        background: #10b981;
+        color: #fff;
+        padding: 10px 18px;
+        font-size: 15px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.3s ease;
+    }
+    .empty-state .button:hover {
+        background: #059669;
+        transform: translateY(-2px);
+    }
 </style>
 </head>
 <body>
 
 <header>
     <div class="user-info">
-        <img src="{% static 'images/user.png' %}" alt="User">
+        <img src="{{ student.image.url|default:'/static/images/avatar.png' }}" alt="صورة الطالب" class="student-photo">
         <span>عبداللة سويب</span>
-        <button class="logout-btn" title="تسجيل الخروج">
+        <a href="{% url 'logout' %}" class="logout-btn" title="تسجيل الخروج">
             <i class="fa-solid fa-right-from-bracket"></i>
-        </button>
+        </a>
     </div>
 
     <div class="logo">
@@ -106,29 +145,55 @@
 </div>
 
 <div class="main-content">
-    <h1>إدارة الاقسام</h1>
-    <div class="cards">
-        <div class="card">
-            <i class="fa-solid fa-plus"></i>
-            <h2>إضافة قسم جديد</h2>
-            <p>إنشاء قسم جديد للنظام</p>
-        </div>
-        <div class="card">
-            <i class="fa-solid fa-list"></i>
-            <h2>عرض الاقسام الحالية</h2>
-            <p>عرض جميع الاقسام الموجودة</p>
-        </div>
-        <div class="card">
-            <i class="fa-solid fa-edit"></i>
-            <h2>تعديل قسم</h2>
-            <p>تعديل بيانات أي قسم</p>
-        </div>
-        <div class="card">
-            <i class="fa-solid fa-trash"></i>
-            <h2>حذف قسم</h2>
-            <p>حذف قسم غير مرغوب فيه</p>
+    <h1>إدارة الأقسام</h1>
+
+    {% if sections %}
+    <div style="text-align: left; margin-bottom:12px;">
+        <a href="{% url 'add_section' %}">
+            <button class="button">
+                <i class="fa-solid fa-plus"></i> إنشاء قسم جديد
+            </button>
+        </a>
+    </div>
+
+    <div style="margin-top:10px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 3px 12px rgba(0,0,0,0.06)">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>رمز القسم</th>
+                    <th>اسم القسم</th>
+                    <th>الوصف</th>
+                    <th style="text-align:center;">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in sections %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ s.id }}</td>
+                    <td>{{ s.name }}</td>
+                    <td>{% if s.description %}{{ s.description }}{% else %}-{% endif %}</td>
+                    <td class="actions">
+                        <button class="action-btn edit-btn" title="تعديل"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="action-btn delete-btn" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                        <button class="action-btn print-btn" title="طباعة"><i class="fa-solid fa-print"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="total-count">
+            عدد الأقسام: {{ sections|length }}
         </div>
     </div>
+    {% else %}
+    <div class="empty-state">
+        <p>لا يوجد أقسام حتى الآن.</p>
+        <button class="button"><i class="fa-solid fa-plus"></i> إنشاء قسم جديد</button>
+    </div>
+    {% endif %}
 </div>
 
 </body>
