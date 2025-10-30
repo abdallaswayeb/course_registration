@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'course_registration.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'course_registration',           
+        'NAME': 'courserUniversty',           
         'USER': 'abdalla',            
         'PASSWORD': 'mysecretpassword',  # كلمة المرور
         'HOST': 'localhost',         
