@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from courses.models import Student, Section, Material, Enrollment
+from django.contrib import messages
+from django.db import IntegrityError
 
 # --- صفحة رئيسية
 def root_redirect(request):
@@ -45,6 +47,18 @@ def materials_page(request):
         return redirect('login')
 
     materials = Material.objects.all()
+
+    code = request.GET.get('code', '').strip()
+    name = request.GET.get('name', '').strip()
+    hours = request.GET.get('hours', '').strip()
+
+    if code:
+        materials = materials.filter(code__icontains=code)
+    if name:
+        materials = materials.filter(name__icontains=name)
+    if hours:
+        materials = materials.filter(hours=hours)
+
     return render(request, 'materials.html', {'materials': materials})
 
 
@@ -80,14 +94,31 @@ def students_page(request):
 
 
 # --- صفحة الأقسام
-@login_required
 def sections_page(request):
     if not request.user.is_staff:
         return redirect('login')
 
     sections = Section.objects.all()
-    return render(request, 'sections.html', {'sections': sections})
 
+    # قراءة الفلاتر
+    id_section = request.GET.get('id_section', '').strip()
+    name = request.GET.get('name', '').strip()
+    description = request.GET.get('description', '').strip()
+
+    # تطبيق الفلاتر
+    if id_section:
+        try:
+            sections = sections.filter(id=int(id_section))
+        except ValueError:
+            sections = sections.none()
+
+    if name:
+        sections = sections.filter(name__icontains=name)
+
+    if description:
+        sections = sections.filter(description__icontains=description)
+
+    return render(request, 'sections.html', {'sections': sections})
 
 # --- صفحة التقارير
 @login_required
@@ -195,3 +226,57 @@ def add_section(request):
             Section.objects.create(id=section_id, name=name)
             return redirect('sections_page') 
     return render(request, 'add_section.html')  
+
+
+
+def add_material_page(request):
+    if not request.user.is_staff:
+        return redirect('login')
+
+    sections = Section.objects.all()
+    field_errors = {}  # لتخزين الأخطاء الخاصة بكل حقل
+
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        name = request.POST.get('name', '').strip()
+        section_id = request.POST.get('section')
+        hours = request.POST.get('hours', '').strip()
+        description = request.POST.get('description', '').strip()
+
+        # التحقق من الحقول الفارغة
+        if not code:
+            field_errors['code'] = " يرجى إدخال رمز المادة"
+        elif Material.objects.filter(code=code).exists():
+            field_errors['code'] = " رمز المادة موجود مسبقًا"
+
+        if not name:
+            field_errors['name'] = " يرجى إدخال اسم المادة"
+
+        if not section_id:
+            field_errors['section'] = " يرجى اختيار القسم"
+
+        if not hours:
+            field_errors['hours'] = " يرجى إدخال عدد الساعات"
+
+        # إذا فيه أخطاء
+        if field_errors:
+            return render(request, 'add_material.html', {
+                'sections': sections,
+                'field_errors': field_errors,
+                'form_data': request.POST
+            })
+
+        # إنشاء المادة الجديدة
+        section = Section.objects.get(id=section_id)
+        Material.objects.create(
+            code=code,
+            name=name,
+            section=section,
+            hours=hours or 0,
+            description=description
+        )
+
+        messages.success(request, f"تمت إضافة المادة ({name}) بنجاح ✅")
+        return redirect('materials_page')
+
+    return render(request, 'add_material.html', {'sections': sections})
