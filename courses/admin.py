@@ -1,9 +1,16 @@
 from django.contrib import admin
-from .models import Student
+from .models import Student, Section
 
+# إدارة الأقسام
+@admin.register(Section)
+class SectionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'is_active', 'created_at')
+    search_fields = ('name',)
+    list_filter = ('is_active',)
 
+# إدارة الطلاب
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-	list_display = ('student_id', 'first_name', 'last_name', 'email', 'is_active', 'created_at')
-	search_fields = ('first_name', 'last_name', 'email', 'student_id')
-	list_filter = ('is_active',)
+    list_display = ('id_student', 'name', 'section', 'email', 'is_active', 'created_at')
+    search_fields = ('name', 'email', 'id_student')
+    list_filter = ('is_active', 'section')
