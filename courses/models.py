@@ -38,6 +38,7 @@ class Material(models.Model):
     name = models.CharField(max_length=100)
     hours = models.IntegerField(default=3)
     section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
 
     class Meta:
         db_table = 'materials'
