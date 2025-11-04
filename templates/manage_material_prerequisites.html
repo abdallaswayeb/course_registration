@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>إدارة أسبقيات المواد</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body { font-family: "Cairo", sans-serif; margin:0; background:#f5f7fb; color:#222; padding:30px; }
+table { width:100%; border-collapse:collapse; margin-top:20px; }
+th, td { border:1px solid #ccc; padding:8px; text-align:right; }
+th { background:#2563eb; color:#fff; }
+input { padding:6px; width:95%; }
+button { padding:8px 12px; margin:10px 5px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+button:hover { background:#1e40af; }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+</head>
+<body>
+
+<h1>إدارة أسبقيات المواد</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <table id="prereqTable">
+        <thead>
+            <tr>
+                <th>المادة</th>
+                <th>أسبقياتها (مفصولة بفواصل)</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <button type="button" id="addRow">إضافة صف</button>
+    <button type="button" id="removeRow">حذف صف</button>
+    <button type="submit">حفظ</button>
+</form>
+
+{{ all_material_names|json_script:"allMaterialsJSON" }}
+
+<script>
+const materials = JSON.parse(document.getElementById('allMaterialsJSON').textContent);
+
+// عمود المادة
+function attachAutocompleteMaterial(input) {
+    $(input).autocomplete({
+        source: materials,
+        minLength: 1
+    });
+}
+
+// عمود الأسبقيات
+function attachAutocompletePrerequisites(input) {
+    $(input).autocomplete({
+        source: [...materials, "لا يوجد"],
+        minLength: 0,
+        focus: function() { return false; },
+        select: function(event, ui) {
+            // الحصول على جميع العناصر قبل آخر فاصلة
+            let terms = this.value.split(/,\s*/);
+            // إزالة آخر عنصر (الذي نكتبه الآن)
+            terms.pop();
+            // إضافة العنصر الذي تم اختياره
+            terms.push(ui.item.value);
+            // أضف فراغ للفاصل التالي فقط إذا العنصر ليس الأخير
+            this.value = terms.join(", ") + ", ";
+            return false;
+        }
+    }).on('keydown', function(event) {
+        // منع الإدخال العشوائي عند الضغط على Enter
+        if (event.keyCode === $.ui.keyCode.TAB &&
+            $(this).autocomplete("instance").menu.active) {
+            event.preventDefault();
+        }
+    }).focus(function(){
+        $(this).autocomplete("search", ""); // عرض القائمة عند التركيز
+    });
+}
+
+// إضافة صف
+$('#addRow').click(() => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td><input type="text" name="material_name[]" placeholder="اسم المادة"></td>
+        <td><input type="text" name="prerequisites[]" placeholder="الأسبقيات مفصولة بفواصل"></td>
+    `;
+    document.querySelector('#prereqTable tbody').appendChild(row);
+    attachAutocompleteMaterial(row.querySelector('input[name="material_name[]"]'));
+    attachAutocompletePrerequisites(row.querySelector('input[name="prerequisites[]"]'));
+});
+
+// حذف صف
+$('#removeRow').click(() => {
+    const rows = document.querySelectorAll('#prereqTable tbody tr');
+    if (rows.length > 0) rows[rows.length - 1].remove();
+});
+</script>
+
+</body>
+</html>
