@@ -1,0 +1,321 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>جدول المحاضرات</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body {
+    font-family: "Cairo", sans-serif;
+    margin: 0;
+    background: #f5f7fb;
+    color: #222;
+}
+header {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 65px; display: flex; align-items: center; justify-content: space-between;
+    background: #fff; color: #1d4ed8; padding: 0 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10;
+}
+.logo img { width: 65px; height: 65px; }
+
+.user-info { display: flex; align-items: center; gap: 12px; padding: 5px 10px; border-radius: 12px; background: #e0e7ff; }
+.user-info img { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #1d4ed8; }
+.user-info span { font-size: 16px; font-weight: 600; color: #1d4ed8; }
+.logout-btn { background: none; border: none; color: #dc2626; font-size: 20px; cursor: pointer; transition: 0.3s; margin-left: 8px; }
+.logout-btn:hover { color: #b91c1c; }
+
+.sidebar {
+    position: fixed; top: 0; right: 0; width: 230px; height: 100vh;
+    background: linear-gradient(180deg,#0b1a3d,#122052);
+    color: white; display: flex; flex-direction: column; align-items: start;
+    padding-top: 80px;
+}
+.sidebar a { text-decoration: none; color: #f0f0f0; width: 100%; padding: 12px 25px; display: flex; align-items: center; gap: 10px; transition: 0.3s; font-size: 16px; font-weight: 500; }
+.sidebar a:hover { background-color: rgba(255,255,255,0.15); padding-right: 30px; border-radius: 8px; }
+
+.main-content { margin-right: 230px; margin-top: 80px; padding: 30px; }
+.main-content h1 { font-size: 26px; font-weight: 700; color: #1d4ed8; margin-bottom: 15px; }
+
+.add-btn {
+    background: #1d4ed8; color: white; border: none;
+    padding: 10px 18px; font-size: 15px; border-radius: 8px;
+    cursor: pointer; float: left; transition: 0.3s;
+}
+.add-btn:hover { background: #2563eb; }
+
+.timetable {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    margin-top: 20px;
+}
+.timetable th, .timetable td {
+    border: 1px solid #e5e7eb;
+    padding: 12px;
+    text-align: center;
+    vertical-align: top;
+    min-width: 130px;
+}
+.timetable th {
+    background: #3b82f6;
+    color: #fff;
+    font-weight: 600;
+}
+.class-item {
+    padding: 6px 8px;
+    border-radius: 6px;
+    margin: 4px 0;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.class-item small { display: block; font-size: 12px; color: #f9fafb; }
+
+/* نافذة منبثقة */
+.modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100;
+}
+.modal-content {
+    background: #fff; padding: 25px; border-radius: 10px;
+    width: 350px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+.modal-content h2 { margin-bottom: 15px; color: #1d4ed8; }
+.modal-content input, .modal-content select {
+    width: 100%; padding: 8px; margin: 8px 0;
+    border-radius: 6px; border: 1px solid #ccc;
+}
+.modal-content button {
+    padding: 8px 15px; border: none; border-radius: 6px;
+    cursor: pointer; margin-top: 10px;
+}
+.save-btn { background: #1d4ed8; color: #fff; }
+.cancel-btn { background: #dc2626; color: #fff; margin-left: 10px; }
+.delete-btn { background: #6b7280; color: #fff; margin-left: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="user-info">
+        <img src="{% static 'images/user.png' %}" alt="User">
+        <span>عبدالله سويب</span>
+        <a href="#" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i></a>
+    </div>
+    <div class="logo">
+        <img src="{% static 'images/logoMisurataUni.png' %}" alt="Logo">
+    </div>
+</header>
+
+<div class="sidebar">
+    <a href="#"><i class="fa-solid fa-house"></i> الصفحة الرئيسية</a>
+    <a href="#"><i class="fa-solid fa-book"></i> المواد</a>
+    <a href="#"><i class="fa-solid fa-user-graduate"></i> الطلاب</a>
+</div>
+
+<div class="main-content">
+    <h1>جدول المحاضرات</h1>
+    <button class="add-btn" onclick="openModal()">➕ إضافة محاضرة</button>
+
+    <table class="timetable" id="timetable">
+        <thead>
+            <tr>
+                <th>الوقت</th>
+                <th>السبت</th>
+                <th>الأحد</th>
+                <th>الاثنين</th>
+                <th>الثلاثاء</th>
+                <th>الأربعاء</th>
+                <th>الخميس</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>
+                    {% if row == 0 %}08:00 - 10:00
+                    {% elif row == 1 %}10:00 - 12:00
+                    {% elif row == 2 %}12:00 - 14:00
+                    {% elif row == 3 %}14:00 - 16:00
+                    {% elif row == 4 %}16:00 - 18:00
+                    {% endif %}
+                </td>
+                {% for day in days %}
+                    <td>
+                        {% for lecture in lectures %}
+                            {% if lecture.day == day and lecture.time == row %}
+                                <div class="class-item" style="background: {{ colors|random }}"
+                                    onclick="openModal({
+                                        id: {{ lecture.id }},
+                                        material_id: {{ lecture.material.id }},
+                                        group: '{{ lecture.group }}',
+                                        room: '{{ lecture.room }}',
+                                        day: {{ lecture.day }},
+                                        time: {{ lecture.time }}
+                                    })">
+                                    {{ lecture.material.name }} - مجموعة {{ lecture.group }}
+                                    <small>{{ lecture.room }}</small>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- النافذة المنبثقة -->
+<div class="modal" id="addModal">
+    <div class="modal-content">
+        <h2 id="modalTitle">إضافة محاضرة جديدة</h2>
+        <select id="subject">
+            <option value="">اختر المادة</option>
+            {% for material in materials %}
+                <option value="{{ material.id }}">{{ material.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" id="group" placeholder="المجموعة">
+        <select id="day">
+            <option value="1">السبت</option>
+            <option value="2">الأحد</option>
+            <option value="3">الاثنين</option>
+            <option value="4">الثلاثاء</option>
+            <option value="5">الأربعاء</option>
+            <option value="6">الخميس</option>
+        </select>
+        <select id="time">
+            <option value="0">08:00 - 10:00</option>
+            <option value="1">10:00 - 12:00</option>
+            <option value="2">12:00 - 14:00</option>
+            <option value="3">14:00 - 16:00</option>
+            <option value="4">16:00 - 18:00</option>
+        </select>
+        <input type="text" id="room" placeholder="القاعة">
+        <button class="save-btn" onclick="addOrUpdateLecture()">حفظ</button>
+        <button class="cancel-btn" onclick="closeModal()">إلغاء</button>
+        <button class="cancel-btn" id="deleteBtn" style="display:none;" onclick="deleteLecture()">حذف</button>
+    </div>
+</div>
+
+<script>
+let editTarget = null;
+let editLectureId = null;
+
+// ألوان المواد بشكل ديناميكي
+const colors = ["#ef4444","#3b82f6","#10b981","#f59e0b","#6366f1","#06b6d4","#8b5cf6"];
+
+function getRandomColor() {
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function openModal(lecture=null) {
+    document.getElementById("addModal").style.display = "flex";
+
+    if (lecture) {
+        document.getElementById("modalTitle").innerText = "تعديل المحاضرة";
+        document.getElementById("subject").value = lecture.material_id;
+        document.getElementById("group").value = lecture.group;
+        document.getElementById("day").value = lecture.day;
+        document.getElementById("time").value = lecture.time;
+        document.getElementById("room").value = lecture.room;
+
+        editLectureId = lecture.id;
+
+        document.getElementById("deleteBtn").style.display = "inline-block";
+    } else {
+        document.getElementById("modalTitle").innerText = "إضافة محاضرة جديدة";
+        document.getElementById("subject").value = "";
+        document.getElementById("group").value = "";
+        document.getElementById("day").value = "1";
+        document.getElementById("time").value = "0";
+        document.getElementById("room").value = "";
+        editLectureId = null;
+
+        document.getElementById("deleteBtn").style.display = "none";
+    }
+}
+
+function closeModal() {
+    document.getElementById("addModal").style.display = "none";
+}
+
+function addOrUpdateLecture() {
+    const subjectId = document.getElementById("subject").value;
+    const subjectText = document.getElementById("subject").selectedOptions[0].text;
+    const group = document.getElementById("group").value.trim();
+    const room = document.getElementById("room").value.trim();
+    const day = document.getElementById("day").value;
+    const time = document.getElementById("time").value;
+
+    if (!subjectId || !group || !room) return alert("الرجاء تعبئة جميع الحقول");
+
+    const data = {
+        id: editLectureId || 0,
+        material_id: subjectId,
+        group: group,
+        room: room,
+        day: day,
+        time: time
+    };
+
+    fetch("{% url 'save_lecture' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(res => {
+        if(res.success){
+            location.reload(); // بعد الحفظ نعيد تحميل الصفحة لعرض المحاضرة الجديدة
+        } else {
+            alert("حدث خطأ عند الحفظ!");
+            console.log(res.error);
+        }
+    });
+
+    closeModal();
+}
+
+function deleteLecture() {
+    if (!editTarget) return;
+    if (confirm("هل أنت متأكد من حذف المحاضرة؟")) {
+        editTarget.parentElement.removeChild(editTarget);
+        closeModal();
+    }
+}
+
+
+function saveLectureToDB(data) {
+    fetch("{% url 'save_lecture' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(res => {
+        if(res.success){
+            alert("تم الحفظ بنجاح ✅");
+        } else {
+            alert("حدث خطأ!");
+        }
+    });
+}
+</script>
+
+</body>
+</html>
