@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>تنزيل المواد - بوابة الطلبة</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; font-family:"Cairo", sans-serif; }
+
+body {
+    background: #f5f7fb;
+    color:#222;
+}
+
+header {
+    position:fixed; top:0; left:0; right:0;
+    height:65px;
+    background:#fff;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0 25px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.12);
+    z-index:10;
+}
+
+header .logo img { height:55px; }
+header .logout-btn {
+    background:#dc2626;
+    color:#fff;
+    border:none;
+    padding:10px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    transition:0.3s;
+}
+header .logout-btn:hover { background:#b91c1c; transform:translateY(-2px); }
+
+main {
+    padding:100px 20px 50px 20px;
+    max-width:1200px;
+    margin:auto;
+}
+
+/* قسم الترحيب */
+.welcome {
+    text-align:center;
+    margin-bottom:30px;
+    font-size:22px;
+    color:#1d4ed8;
+    background:#e0e7ff;
+    padding:15px 20px;
+    border-radius:12px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.08);
+}
+
+/* Grid للمواد */
+.materials-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:18px;
+    margin-bottom:30px;
+}
+
+.material-card {
+    background:#fff;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.06);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    transition:0.3s;
+}
+.material-card:hover {
+    box-shadow:0 5px 15px rgba(0,0,0,0.12);
+    transform:translateY(-3px);
+}
+.material-card h3 { color:#1d4ed8; margin-bottom:6px; font-size:16px; }
+.material-card p { margin-bottom:8px; font-size:13px; color:#555; }
+.material-card button {
+    background:#10b981;
+    color:#fff;
+    border:none;
+    padding:6px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    transition:0.3s;
+}
+.material-card button:hover { background:#059669; transform:translateY(-1px); }
+
+/* جدول المواد المضافة */
+.table-card {
+    background:#fff;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.08);
+    overflow-x:auto;
+    margin-bottom:15px;
+}
+
+table {
+    width:100%;
+    border-collapse:collapse;
+}
+table th, table td {
+    padding:10px 12px;
+    text-align:center;
+    border-bottom:1px solid #e0e0e0;
+}
+table th { background:#1d4ed8; color:#fff; }
+table tr:nth-child(even) { background:#f5f5f5; }
+table tr:last-child td { border-bottom:none; }
+
+.total-hours-card {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    background:#e0e7ff;
+    padding:12px 18px;
+    border-radius:12px;
+    font-weight:600;
+    color:#1d4ed8;
+    box-shadow:0 3px 12px rgba(0,0,0,0.08);
+}
+
+.download-btn {
+    background:#059669;
+    color:#fff;
+    border:none;
+    padding:12px 20px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    transition:0.3s;
+}
+.download-btn:hover { background:#059669; transform:translateY(-2px); }
+
+@media (max-width:600px){
+    .materials-grid { grid-template-columns:1fr; }
+    table th, table td { font-size:13px; padding:8px; }
+    .total-hours-card { flex-direction:column; gap:10px; text-align:center; }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <img src="static/images/logoMisurataUni.png" alt="Logo">
+    </div>
+    <button class="logout-btn">تسجيل الخروج</button>
+</header>
+
+<main>
+    <div class="welcome">
+        مرحبًا بك في بوابة الطلبة، اختر المواد الخاصة بك أدناه
+    </div>
+
+    <div class="materials-grid" id="materials-grid">
+        <!-- مثال مواد -->
+        <div class="material-card" data-code="CS101" data-name="مقدمة في الحوسبة" data-hours="3">
+            <h3>CS101</h3>
+            <p>مقدمة في الحوسبة</p>
+            <p>عدد الساعات: 3</p>
+            <button onclick="addMaterial(this)">إضافة</button>
+        </div>
+        <div class="material-card" data-code="MATH201" data-name="الجبر" data-hours="4">
+            <h3>MATH201</h3>
+            <p>الجبر</p>
+            <p>عدد الساعات: 4</p>
+            <button onclick="addMaterial(this)">إضافة</button>
+        </div>
+        <div class="material-card" data-code="PHY101" data-name="الفيزياء" data-hours="3">
+            <h3>PHY101</h3>
+            <p>الفيزياء</p>
+            <p>عدد الساعات: 3</p>
+            <button onclick="addMaterial(this)">إضافة</button>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <table id="selected-materials">
+            <thead>
+                <tr>
+                    <th>رمز المادة</th>
+                    <th>اسم المادة</th>
+                    <th>عدد الساعات</th>
+                    <th>حذف</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- المواد المضافة ستظهر هنا -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="total-hours-card">
+        إجمالي عدد الساعات: <span id="total-hours">0</span>
+        <button class="download-btn" onclick="downloadMaterials()">تنزيل المواد</button>
+    </div>
+
+</main>
+
+<script>
+let totalHours = 0;
+
+function addMaterial(button){
+    const card = button.parentElement;
+    const code = card.getAttribute("data-code");
+    const name = card.getAttribute("data-name");
+    const hours = parseInt(card.getAttribute("data-hours"));
+
+    if(document.querySelector(`#selected-materials tbody tr[data-code="${code}"]`)){
+        alert("هذه المادة مضافة بالفعل!");
+        return;
+    }
+
+    const tbody = document.querySelector("#selected-materials tbody");
+    const tr = document.createElement("tr");
+    tr.setAttribute("data-code", code);
+    tr.innerHTML = `
+        <td>${code}</td>
+        <td>${name}</td>
+        <td>${hours}</td>
+        <td><button onclick="removeMaterial(this)">حذف</button></td>
+    `;
+    tbody.appendChild(tr);
+
+    totalHours += hours;
+    document.getElementById("total-hours").innerText = totalHours;
+}
+
+function removeMaterial(btn){
+    const tr = btn.parentElement.parentElement;
+    const hours = parseInt(tr.children[2].innerText);
+    totalHours -= hours;
+    document.getElementById("total-hours").innerText = totalHours;
+    tr.remove();
+}
+
+// زر تنزيل المواد (يمكن تعديله لاحقًا للباك اند)
+function downloadMaterials(){
+    alert("تم تنزيل المواد بنجاح!"); 
+}
+</script>
+
+</body>
+</html>
