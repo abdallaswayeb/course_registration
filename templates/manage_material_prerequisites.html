@@ -5,95 +5,179 @@
 <meta charset="UTF-8">
 <title>إدارة أسبقيات المواد</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-body { font-family: "Cairo", sans-serif; margin:0; background:#f5f7fb; color:#222; padding:30px; }
-table { width:100%; border-collapse:collapse; margin-top:20px; }
-th, td { border:1px solid #ccc; padding:8px; text-align:right; }
-th { background:#2563eb; color:#fff; }
-input { padding:6px; width:95%; }
-button { padding:8px 12px; margin:10px 5px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; }
-button:hover { background:#1e40af; }
-</style>
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+<style>
+    body {
+        font-family: "Cairo", sans-serif;
+        margin: 0;
+        background-color: #f5f7fb;
+        color: #222;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    header {
+        position: fixed; top:0; left:0; right:0;
+        height:65px; display:flex; align-items:center; justify-content:space-between;
+        background:#fff; color:#1d4ed8; padding:0 25px;
+        box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:10;
+    }
+    .logo { display:flex; align-items:center; gap:10px; margin-left:15px; }
+    .logo img { width:65px; height:65px; }
+
+    .user-info { display:flex; align-items:center; gap:12px; padding:5px 10px; border-radius:12px; background:#e0e7ff; }
+    .user-info img { width:38px; height:38px; border-radius:50%; border:2px solid #1d4ed8; }
+    .user-info span { font-size:16px; font-weight:600; color:#1d4ed8; }
+    .logout-btn { background:none; border:none; color:#dc2626; font-size:20px; cursor:pointer; transition:0.3s; margin-left:8px; }
+    .logout-btn:hover { color:#b91c1c; }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 230px;
+        height: 100vh;
+        background: linear-gradient(180deg,#0b1a3d,#122052);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        padding-top: 80px; 
+        box-shadow: -3px 0 10px rgba(0,0,0,0.05);
+    }
+    .sidebar h3 { text-align:right; width:100%; padding-right:25px; margin-bottom:25px; font-size:18px; font-weight:600; color:#f0f0f5; }
+    .sidebar a { text-decoration:none; color:#f0f0f0; width:100%; padding:12px 25px; display:flex; align-items:center; gap:10px; transition:all 0.3s ease; font-size:16px; font-weight:500; }
+    .sidebar a i { font-size:17px; }
+    .sidebar a:hover { background-color: rgba(255,255,255,0.15); padding-right:30px; border-radius:8px; }
+    .sidebar a.active {
+        background-color: rgba(255, 255, 255, 0.25);
+        border-right: 4px solid #60a5fa;
+        padding-right: 30px;
+        border-radius: 8px 0 0 8px;
+        font-weight: 600;
+        color: #ffffff;
+    }
+
+    .main-content {
+        margin-right: 230px; 
+        margin-top: 80px;    
+        padding: 30px;
+        height: calc(100vh - 80px);
+        overflow-y: auto;
+    }
+
+    .main-content h1 {
+        font-size:26px; font-weight:700; color:#1d4ed8; margin-bottom:25px;
+    }
+
+    table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 3px 12px rgba(0,0,0,0.06); }
+    table th, table td { padding:10px; text-align:right; border-bottom:1px solid #e5e7eb; vertical-align: middle; }
+    table th { background:#f3f4f6; font-weight:600; color:#1d4ed8; }
+    input { padding:7px; width:95%; border:1px solid #ccc; border-radius:6px; outline:none; }
+    button { padding:9px 14px; margin:10px 6px; background:#2563eb; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
+    button:hover { background:#1e40af; }
+
+</style>
 </head>
 <body>
 
-<h1>إدارة أسبقيات المواد</h1>
+<header>
+    <div class="user-info">
+        <img src="{% static 'images/user.png' %}" alt="User">
+        <span>عبدالله سويب</span>
+        <a href="{% url 'logout' %}" class="logout-btn" title="تسجيل الخروج">
+            <i class="fa-solid fa-right-from-bracket"></i>
+        </a>
+    </div>
 
-<form method="post">
-    {% csrf_token %}
-    <table id="prereqTable">
-        <thead>
-            <tr>
-                <th>المادة</th>
-                <th>أسبقياتها (مفصولة بفواصل)</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div class="logo">
+        <img src="{% static 'images/logoMisurataUni.png' %}" alt="Logo">
+    </div>
+</header>
 
-    <button type="button" id="addRow">إضافة صف</button>
-    <button type="button" id="removeRow">حذف صف</button>
-    <button type="submit">حفظ</button>
-</form>
+<div class="sidebar">
+    <h3>القائمة</h3>
+    <a href="{% url 'admin_dashbord' %}" class="{% if request.path == '/dashbord/' or request.path == '/' %}active{% endif %}">
+        <i class="fa-solid fa-house"></i> الصفحة الرئيسية
+    </a>
+    <a href="{% url 'materials_page' %}" class="{% if '/materials/' in request.path %}active{% endif %}"><i class="fa-solid fa-book"></i> المواد</a>
+    <a href="{% url 'students_page' %}" class="{% if '/students/' in request.path %}active{% endif %}"><i class="fa-solid fa-user-graduate"></i> الطلاب</a>
+    <a href="{% url 'sections_page' %}" class="{% if '/sections' in request.path %}active{% endif %}"><i class="fa-solid fa-layer-group"></i> الأقسام</a>
+    <a href="{% url 'procedures_page' %}" class="{% if '/procedures/' in request.path or request.path == '/procedures' %}active{% endif %}">
+        <i class="fa fa-gear"></i> الإجراءات
+    </a>
+    <a href="#"><i class="fa-solid fa-chart-line"></i> التقارير</a>
+</div>
 
-{{ all_material_names|json_script:"allMaterialsJSON" }}
+<div class="main-content">
+    <h1>إدارة أسبقيات المواد</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        <table id="prereqTable">
+            <thead>
+                <tr>
+                    <th>المادة</th>
+                    <th>أسبقيتها</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in prerequisites_data %}
+                <tr>
+                    <td><input type="text" name="material_name[]" value="{{ item.material }}" required></td>
+                    <td><input type="text" name="prerequisites[]" value="{{ item.prerequisite }}" required></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="button" id="addRow">➕ إضافة صف</button>
+        <button type="button" id="removeRow">➖ حذف صف</button>
+        <button type="submit">💾 حفظ</button>
+    </form>
+
+    {{ all_material_names|json_script:"allMaterialsJSON" }}
+</div>
 
 <script>
 const materials = JSON.parse(document.getElementById('allMaterialsJSON').textContent);
 
-// عمود المادة
+// خانة المادة
 function attachAutocompleteMaterial(input) {
     $(input).autocomplete({
         source: materials,
-        minLength: 1
+        minLength: 0
+    }).focus(function(){
+        $(this).autocomplete("search", "");
     });
 }
 
-// عمود الأسبقيات
-function attachAutocompletePrerequisites(input) {
+// خانة الأسبقية
+function attachAutocompletePrerequisite(input) {
     $(input).autocomplete({
         source: [...materials, "لا يوجد"],
-        minLength: 0,
-        focus: function() { return false; },
-        select: function(event, ui) {
-            // الحصول على جميع العناصر قبل آخر فاصلة
-            let terms = this.value.split(/,\s*/);
-            // إزالة آخر عنصر (الذي نكتبه الآن)
-            terms.pop();
-            // إضافة العنصر الذي تم اختياره
-            terms.push(ui.item.value);
-            // أضف فراغ للفاصل التالي فقط إذا العنصر ليس الأخير
-            this.value = terms.join(", ") + ", ";
-            return false;
-        }
-    }).on('keydown', function(event) {
-        // منع الإدخال العشوائي عند الضغط على Enter
-        if (event.keyCode === $.ui.keyCode.TAB &&
-            $(this).autocomplete("instance").menu.active) {
-            event.preventDefault();
-        }
+        minLength: 0
     }).focus(function(){
-        $(this).autocomplete("search", ""); // عرض القائمة عند التركيز
+        $(this).autocomplete("search", "");
     });
 }
 
-// إضافة صف
+// إضافة صف جديد
 $('#addRow').click(() => {
     const row = document.createElement('tr');
     row.innerHTML = `
-        <td><input type="text" name="material_name[]" placeholder="اسم المادة"></td>
-        <td><input type="text" name="prerequisites[]" placeholder="الأسبقيات مفصولة بفواصل"></td>
+        <td><input type="text" name="material_name[]" placeholder="اسم المادة" required></td>
+        <td><input type="text" name="prerequisites[]" placeholder="أسبقية المادة (أو لا يوجد)" required></td>
     `;
     document.querySelector('#prereqTable tbody').appendChild(row);
     attachAutocompleteMaterial(row.querySelector('input[name="material_name[]"]'));
-    attachAutocompletePrerequisites(row.querySelector('input[name="prerequisites[]"]'));
+    attachAutocompletePrerequisite(row.querySelector('input[name="prerequisites[]"]'));
 });
 
-// حذف صف
+// حذف آخر صف
 $('#removeRow').click(() => {
     const rows = document.querySelectorAll('#prereqTable tbody tr');
     if (rows.length > 0) rows[rows.length - 1].remove();

@@ -96,7 +96,7 @@
         {% csrf_token %}
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-person"></i></span>
-            <input type="text" class="form-control" name="student_id" placeholder="رقم القيد" required>
+            <input type="text" class="form-control" name="username" placeholder="اسم المستخدم" required>
         </div>
 
         <div class="input-group">
@@ -105,11 +105,14 @@
         </div>
 
         <button type="submit" class="btn btn-login">دخول</button>
+
         {% if error %}
         <div style="margin-top:12px; color:#b91c1c; font-weight:600">{{ error }}</div>
         {% endif %}
+        
+        <!-- مجرد زر بدون رابط -->
         <div style="margin-top:14px; text-align:center">
-            <a href="{% url 'signup' %}" class="btn btn-outline-primary" style="width:100%;">إنشاء مستخدم</a>
+            <button class="btn btn-outline-primary" style="width:100%;" type="button">إنشاء مستخدم</button>
         </div>
     </form>
 </div>
