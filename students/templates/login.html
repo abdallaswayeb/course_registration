@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>تسجيل الدخول - بوابة الطلبة</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    /* الخطوط الأساسية */
+    body {
+        font-family: "Cairo", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #0b1a3d, #122052);
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    /* صندوق تسجيل الدخول */
+    .login-box {
+        background: #fff;
+        color: #222;
+        padding: 30px 20px;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        width: 90%;
+        max-width: 400px;
+        transition: all 0.3s ease;
+    }
+
+    .login-box h1 {
+        text-align: center;
+        color: #1d4ed8;
+        margin-bottom: 25px;
+        font-size: 24px;
+    }
+
+    /* الحقول */
+    .form-group {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #1d4ed8;
+        font-size: 15px;
+    }
+
+    .form-group input {
+        padding: 12px 14px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 15px;
+        width: 100%;
+        box-sizing: border-box;
+        transition: all 0.2s ease;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 5px rgba(37,99,235,0.2);
+    }
+
+    /* زر الدخول */
+    button.button {
+        background: #10b981;
+        color: #fff;
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 10px;
+        font-size: 16px;
+        transition: 0.3s;
+    }
+
+    button.button:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(16,185,129,0.3);
+    }
+
+    .error-msg {
+        color: #dc2626;
+        font-size: 14px;
+        margin-top: 5px;
+        display: none; /* يمكن إظهاره عند الحاجة */
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 500px) {
+        .login-box {
+            padding: 25px 15px;
+        }
+        .login-box h1 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        button.button {
+            font-size: 15px;
+            padding: 10px;
+        }
+    }
+
+    @media (max-height: 450px) {
+        body {
+            align-items: flex-start;
+            padding-top: 20px;
+        }
+    }
+</style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>تسجيل الدخول</h1>
+        <form method="POST">
+            <div class="form-group">
+                <label>البريد الإلكتروني</label>
+                <input type="email" name="email" placeholder="أدخل البريد الإلكتروني" required>
+                <div class="error-msg">البريد الإلكتروني غير صحيح</div>
+            </div>
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <input type="password" name="password" placeholder="أدخل كلمة المرور" required>
+                <div class="error-msg">كلمة المرور غير صحيحة</div>
+            </div>
+            <button type="submit" class="button">تسجيل الدخول</button>
+        </form>
+    </div>
+</body>
+</html>

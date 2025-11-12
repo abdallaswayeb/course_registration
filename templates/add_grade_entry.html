@@ -1,0 +1,400 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>رصد الدرجات</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+/* ==================== قاعدة الصفحة ==================== */
+body {
+    font-family: "Cairo", sans-serif;
+    margin: 0;
+    background-color: #f5f7fb;
+    color: #222;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ==================== الهيدر ==================== */
+header {
+    position: fixed;
+    top:0;
+    left:0;
+    right:0;
+    height:65px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#fff;
+    color:#1d4ed8;
+    padding:0 25px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    z-index:10;
+}
+
+.logo {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-left:15px;
+}
+
+.logo img {
+    width:65px;
+    height:65px;
+}
+
+.user-info {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:5px 10px;
+    border-radius:12px;
+    background:#e0e7ff;
+}
+
+.user-info img {
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    border:2px solid #1d4ed8;
+}
+
+.user-info span {
+    font-size:16px;
+    font-weight:600;
+    color:#1d4ed8;
+}
+
+.logout-btn {
+    background:none;
+    border:none;
+    color:#dc2626;
+    font-size:20px;
+    cursor:pointer;
+    transition:0.3s;
+    margin-left:8px;
+}
+
+.logout-btn:hover {
+    color:#b91c1c;
+}
+
+/* ==================== الشريط الجانبي ==================== */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 230px;
+    height: 100vh;
+    background: linear-gradient(180deg,#0b1a3d,#122052);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    padding-top: 80px;
+    box-shadow: -3px 0 10px rgba(0,0,0,0.05);
+    transition: width 0.3s;
+}
+
+.sidebar h3 {
+    text-align:right;
+    width:100%;
+    padding-right:25px;
+    margin-bottom:25px;
+    font-size:18px;
+    font-weight:600;
+    color:#f0f0f5;
+}
+
+.sidebar a {
+    text-decoration:none;
+    color:#f0f0f0;
+    width:100%;
+    padding:12px 25px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    transition: all 0.3s ease;
+    font-size:16px;
+    font-weight:500;
+}
+
+.sidebar a i {
+    font-size:17px;
+}
+
+.sidebar a:hover {
+    background-color: rgba(255,255,255,0.15);
+    padding-right:30px;
+    border-radius:8px;
+}
+
+.sidebar a.active {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-right: 4px solid #60a5fa;
+    padding-right: 30px;
+    border-radius: 8px 0 0 8px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+/* ==================== المحتوى الرئيسي ==================== */
+.main-content {
+    margin-right: 230px;
+    margin-top: 80px;
+    padding: 30px;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+}
+
+.main-content h1 {
+    font-size:26px;
+    font-weight:700;
+    color:#1d4ed8;
+    margin-bottom:20px;
+}
+
+/* ==================== صندوق البحث ==================== */
+.search-box {
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.06);
+    margin-bottom:20px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.search-box input {
+    width: 250px;
+    padding:8px 10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    font-size:14px;
+}
+
+.search-box button {
+    background:#2563eb;
+    color:#fff;
+    border:none;
+    padding:9px 16px;
+    border-radius:8px;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.search-box button:hover {
+    background:#1e40af;
+}
+
+/* ==================== صندوق المواد ==================== */
+.section-box {
+    margin-bottom:20px;
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.06);
+}
+
+/* ==================== الجداول ==================== */
+table {
+    width:100%;
+    border-collapse:collapse;
+    direction:rtl;
+    margin-top:15px;
+}
+
+table th, table td {
+    padding:10px;
+    text-align:right;
+    border-bottom:1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+table th {
+    background:#f3f4f6;
+    font-weight:600;
+    color:#1d4ed8;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+table tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+.grade-input {
+    width: 60px;
+    padding:5px 8px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    text-align: center;
+}
+
+/* ==================== الأزرار ==================== */
+button.button {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:#10b981;
+    color:#fff;
+    padding:10px 16px;
+    border-radius:8px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:20px;
+    transition:0.3s;
+}
+
+button.button:hover {
+    background:#0ea472;
+    transform: scale(1.05);
+}
+
+/* ==================== ملخص المعدل ==================== */
+.gpa-summary {
+    background:#f9fafb;
+    padding:15px;
+    border-radius:10px;
+    border:1px solid #e5e7eb;
+    margin-top:15px;
+}
+
+/* ==================== الرسائل ==================== */
+.alert {
+    padding:12px;
+    background:#d1fae5;
+    border:1px solid #10b981;
+    border-radius:8px;
+    margin-bottom:15px;
+    color:#065f46;
+}
+
+/* ==================== Responsive ==================== */
+@media (max-width: 768px) {
+    .sidebar { width: 70px; }
+    .main-content { margin-right: 70px; padding: 15px; }
+    table th, table td { font-size: 12px; }
+    .search-box { flex-direction: column; align-items: stretch; gap:5px; }
+    .search-box input { width: 100%; }
+}
+</style>
+<script>
+function confirmSave() {
+    return confirm('هل تريد حفظ الدرجات؟');
+}
+</script>
+</head>
+<body>
+
+<header>
+    <div class="user-info">
+        <img src="{% static 'images/user.png' %}" alt="User">
+        <span>عبدالله سويب</span>
+        <a href="#" class="logout-btn" title="تسجيل الخروج">
+            <i class="fa-solid fa-right-from-bracket"></i>
+        </a>
+    </div>
+    <div class="logo">
+        <img src="{% static 'images/logoMisurataUni.png' %}" alt="Logo">
+    </div>
+</header>
+
+<div class="sidebar">
+    <h3>القائمة</h3>
+    <a href="{% url 'admin_dashbord' %}" class="{% if request.path == '/dashbord/' or request.path == '/' %}active{% endif %}">
+        <i class="fa-solid fa-house"></i> الصفحة الرئيسية
+    </a>
+    <a href="{% url 'materials_page' %}" class="{% if '/materials/' in request.path %}active{% endif %}">
+        <i class="fa-solid fa-book"></i> المواد
+    </a>
+    <a href="{% url 'students_page' %}" class="{% if '/students/' in request.path %}active{% endif %}">
+        <i class="fa-solid fa-user-graduate"></i> الطلاب
+    </a>
+    <a href="{% url 'sections_page' %}" class="{% if '/sections/' in request.path %}active{% endif %}">
+        <i class="fa-solid fa-layer-group"></i> الأقسام
+    </a>
+    <a href="{% url 'procedures_page' %}" class="{% if '/procedures/' in request.path or request.path == '/procedures' %}active{% endif %}">
+        <i class="fa fa-gear"></i> الإجراءات
+    </a>
+    <a href="#"><i class="fa-solid fa-chart-line"></i> التقارير</a>
+</div>
+
+<div class="main-content">
+    <h1>رصد درجات الطلاب</h1>
+
+    {% if messages %}
+    <div class="alert">
+        {{ messages }}
+    </div>
+    {% endif %}
+
+    <!-- نموذج البحث -->
+    <form class="search-box" method="post">
+        {% csrf_token %}
+        <label>أدخل رقم القيد:</label>
+        <input type="text" name="student_id" placeholder="مثال: 20201001" value="{{ student.id_student|default:'' }}">
+        <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> بحث</button>
+    </form>
+
+    {% if student %}
+    <div class="section-box">
+        <h3>بيانات الطالب</h3>
+        <p><strong>الاسم:</strong> {{ student.name }}</p>
+        <p><strong>القسم:</strong> {{ student.section.name }}</p>
+        
+    </div>
+
+    {% if materials %}
+    <form method="post" onsubmit="return confirmSave();">
+        {% csrf_token %}
+        <input type="hidden" name="student_id" value="{{ student.id_student }}">
+        <div class="section-box">
+            <h3>مواد السمستر الحالي</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>رمز المادة</th>
+                        <th>اسم المادة</th>
+                        <th>عدد الساعات</th>
+                        <th>الدرجة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in materials %}
+                    <tr>
+                        <td>{{ e.material.code }}</td>
+                        <td>{{ e.material.name }}</td>
+                        <td>{{ e.material.hours }}</td>
+                        <td><input type="number" name="grade_{{ e.id }}" class="grade-input" min="0" max="100" placeholder="0-100"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" name="save_grades" class="button">
+                <i class="fa-solid fa-save"></i> حفظ الدرجات
+            </button>
+        </div>
+    </form>
+
+    {% if latest_gpa %}
+    <div class="gpa-summary">
+        <p><strong>معدل السمستر الحالي:</strong> {{ latest_gpa.semester_gpa }}</p>
+        <p><strong>المعدل التراكمي:</strong> {{ latest_gpa.cumulative_gpa }}</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <p>لا توجد مواد مسجلة لهذا الطالب.</p>
+    {% endif %}
+    {% endif %}
+</div>
+
+</body>
+</html>

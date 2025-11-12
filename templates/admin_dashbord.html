@@ -132,6 +132,9 @@
     <a href="{% url 'materials_page' %}" class="{% if '/materials/' in request.path %}{% endif %}"><i class="fa-solid fa-book"></i> المواد</a>
     <a href="{% url 'students_page' %}" class="{% if '/students/' in request.path %}{% endif %}"><i class="fa-solid fa-user-graduate"></i> الطلاب</a>
     <a href="{% url 'sections_page' %}" class="{% if '/sections' in request.path %}active{% endif %}"><i class="fa-solid fa-layer-group"></i> الأقسام</a>
+    <a href="{% url 'procedures_page' %}" class="{% if '/procedures/' in request.path or request.path == '/procedures' %}active{% endif %}">
+        <i class="fa fa-gear"></i> الإجراءات
+    </a>
     <a href="#"><i class="fa-solid fa-chart-line"></i> التقارير</a>
 </div>
 

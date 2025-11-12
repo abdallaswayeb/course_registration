@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>كشف الدرجات - بوابة الطلبة</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; font-family:"Cairo", sans-serif; }
+body { background:#f0f4f8; color:#222; }
+
+header {
+    position:fixed; top:0; left:0; right:0;
+    height:65px; background:#fff;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0 25px; box-shadow:0 4px 16px rgba(0,0,0,0.12); z-index:10;
+    border-bottom-left-radius:12px; border-bottom-right-radius:12px;
+}
+header .logo img { height:55px; }
+header .logout-btn {
+    background:#ef4444; color:#fff; border:none; padding:8px 14px; border-radius:8px;
+    cursor:pointer; font-weight:600; transition:0.3s;
+}
+header .logout-btn:hover { background:#dc2626; }
+
+main {
+    padding:100px 20px 50px 20px; max-width:1200px; margin:auto;
+}
+
+h1 {
+    color:#1d4ed8; text-align:center; margin-bottom:30px;
+    font-size:28px; font-weight:700;
+}
+
+.semester-box {
+    background:#fff; padding:25px; border-radius:16px; margin-bottom:30px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.1);
+    transition:0.3s;
+}
+.semester-box:hover {
+    box-shadow:0 10px 28px rgba(0,0,0,0.15);
+}
+
+.semester-box h2 {
+    color:#1d4ed8; margin-bottom:15px; font-size:22px;
+    border-bottom:2px solid #1d4ed8; padding-bottom:5px;
+}
+
+.semester-box table {
+    width:100%; border-collapse:collapse; margin-bottom:12px;
+    font-size:15px;
+}
+.semester-box table th, .semester-box table td {
+    padding:12px 10px; text-align:center; border-bottom:1px solid #e0e0e0;
+}
+.semester-box table th {
+    background:linear-gradient(135deg,#1d4ed8,#2563eb); color:#fff; font-weight:600;
+}
+.semester-box table tr:last-child td { border-bottom:none; }
+
+.semester-summary {
+    text-align:right; font-weight:600; color:#1e40af; margin-top:8px;
+    background:#e0e7ff; padding:8px 12px; border-radius:8px;
+}
+
+@media (max-width:900px){
+    .semester-box table th, .semester-box table td { font-size:14px; padding:8px; }
+}
+@media (max-width:600px){
+    .semester-box table th, .semester-box table td { font-size:13px; padding:6px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <img src="static/images/logoMisurataUni.png" alt="Logo">
+    </div>
+    <button class="logout-btn">تسجيل الخروج</button>
+</header>
+
+<main>
+    <h1>كشف الدرجات</h1>
+
+    <!-- مثال سمستر -->
+    <div class="semester-box">
+        <h2>السمستر 1</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>رمز المادة</th>
+                    <th>اسم المادة</th>
+                    <th>الدرجة</th>
+                    <th>عدد الساعات</th>
+                    <th>حالة المادة</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>CS101</td>
+                    <td>مقدمة في الحوسبة</td>
+                    <td>85</td>
+                    <td>3</td>
+                    <td>ناجح</td>
+                </tr>
+                <tr>
+                    <td>MATH101</td>
+                    <td>الجبر</td>
+                    <td>70</td>
+                    <td>4</td>
+                    <td>ناجح</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="semester-summary">
+            عدد ساعات السمستر: 7 | عدد الساعات الناجحة: 7 | معدل السمستر: 77.5 | المعدل التراكمي: 77.5
+        </div>
+    </div>
+
+    <!-- مثال سمستر آخر -->
+    <div class="semester-box">
+        <h2>السمستر 2</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>رمز المادة</th>
+                    <th>اسم المادة</th>
+                    <th>الدرجة</th>
+                    <th>عدد الساعات</th>
+                    <th>حالة المادة</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>PHY101</td>
+                    <td>الفيزياء</td>
+                    <td>90</td>
+                    <td>3</td>
+                    <td>ناجح</td>
+                </tr>
+                <tr>
+                    <td>CHEM101</td>
+                    <td>الكيمياء</td>
+                    <td>60</td>
+                    <td>3</td>
+                    <td>ناجح</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="semester-summary">
+            عدد ساعات السمستر: 6 | عدد الساعات الناجحة: 6 | معدل السمستر: 75 | المعدل التراكمي: 76.25
+        </div>
+    </div>
+
+</main>
+
+</body>
+</html>
