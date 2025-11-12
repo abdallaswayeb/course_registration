@@ -48,6 +48,10 @@ class Material(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.code})"
+    
+    def get_prerequisites(self):
+        """ترجع كل المواد المطلوبة قبل هذه المادة"""
+        return Material.objects.filter(is_prerequisite_of__material=self)
 
 
 # تنزيل المواد (Enrollment)
@@ -123,5 +127,75 @@ class GradeRecord(models.Model):
             cumulative_gpa=round(cumulative_avg, 2)
         )
 
+
+
+
+class MaterialPrerequisite(models.Model):
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.CASCADE,
+        related_name='prerequisites_for',
+    )
+    prerequisite = models.ForeignKey(
+        Material,
+        on_delete=models.CASCADE,
+        related_name='is_prerequisite_of',
+        null=True, blank=True  # <=== السماح بعدم وجود أسبقية
+    )
+
+    class Meta:
+        db_table = 'material_prerequisites'
+        unique_together = ('material', 'prerequisite')
+        verbose_name = "أسبقية مادة"
+        verbose_name_plural = "أسبقيات المواد"
+
+    def __str__(self):
+        if self.prerequisite:
+            return f"{self.prerequisite.name} → {self.material.name}"
+        return f"لا توجد أسبقية → {self.material.name}"
     
 
+
+
+
+
+
+class Lecture(models.Model):
+    material = models.ForeignKey(
+        'Material',
+        on_delete=models.CASCADE,
+        related_name='lectures',
+        verbose_name="المادة"
+    )
+    group = models.CharField(max_length=50, verbose_name="المجموعة")
+    room = models.CharField(max_length=50, verbose_name="القاعة")
+    
+    # اليوم: 1=السبت ... 6=الخميس
+    day = models.PositiveSmallIntegerField(choices=[
+        (1, 'السبت'),
+        (2, 'الأحد'),
+        (3, 'الاثنين'),
+        (4, 'الثلاثاء'),
+        (5, 'الأربعاء'),
+        (6, 'الخميس')
+    ], verbose_name="اليوم")
+    
+    # الوقت: 0=08-10 ... 4=16-18
+    time = models.PositiveSmallIntegerField(choices=[
+        (0, '08:00 - 10:00'),
+        (1, '10:00 - 12:00'),
+        (2, '12:00 - 14:00'),
+        (3, '14:00 - 16:00'),
+        (4, '16:00 - 18:00')
+    ], verbose_name="الوقت")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'lectures'
+        verbose_name = "محاضرة"
+        verbose_name_plural = "المحاضرات"
+        unique_together = ('material', 'group', 'day', 'time')  # منع ازدواجية المحاضرة لنفس الوقت والمجموعة
+
+    def __str__(self):
+        return f"{self.material.name} - مجموعة {self.group} ({self.get_day_display()} {self.get_time_display()})"
