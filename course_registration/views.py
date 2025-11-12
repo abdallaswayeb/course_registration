@@ -1,9 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from courses.models import Student, Section, Material, Enrollment
+from courses.models import Lecture, Student, Section, Material, Enrollment , GradeRecord , MaterialPrerequisite    
 from django.contrib import messages
 from django.db import IntegrityError
+from datetime import date
+from datetime import datetime
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+
+
 
 # --- صفحة رئيسية
 def root_redirect(request):
@@ -280,3 +287,397 @@ def add_material_page(request):
         return redirect('materials_page')
 
     return render(request, 'add_material.html', {'sections': sections})
+
+
+
+def edit_section(request, id):
+    section = get_object_or_404(Section, pk=id)
+
+    if request.method == 'POST':
+        new_id = request.POST.get('id')
+        name = request.POST.get('name')
+
+        # لو المستخدم غيّر رمز القسم
+        if str(section.id) != new_id:
+            # نتحقق إذا الرقم الجديد محجوز
+            if Section.objects.filter(pk=new_id).exclude(pk=section.id).exists():
+                return render(request, 'section_detail.html', {
+                    'section': section,
+                    'error': ' رمز القسم موجود مسبقًا، يرجى اختيار رقم آخر.'
+                })
+            else:
+                # نحذف القديم وننشئ الجديد بنفس البيانات (لأن الـ PK ما يتغير)
+                Section.objects.filter(pk=section.id).delete()
+                Section.objects.create(id=new_id, name=name, is_active=section.is_active)
+                return redirect('sections_page')
+        else:
+            # تعديل الاسم فقط
+            section.name = name
+            section.save()
+            return redirect('sections_page')
+
+    return render(request, 'section_detail.html', {'section': section})
+
+
+
+
+def material_detail(request, material_id):
+    material = get_object_or_404(Material, id=material_id)
+    sections = Section.objects.all()
+    field_errors = {}
+    form_data = {}
+
+    if request.method == "POST":
+        code = request.POST.get("code", "").strip()
+        name = request.POST.get("name", "").strip()
+        section_id = request.POST.get("section", "")
+        hours = request.POST.get("hours", "").strip()
+        description = request.POST.get("description", "").strip()
+
+        form_data = {"code": code, "name": name, "section": section_id, "hours": hours, "description": description}
+
+        if Material.objects.exclude(id=material.id).filter(code=code).exists():
+            field_errors["code"] = "رمز المادة موجود مسبقًا."
+        if not name:
+            field_errors["name"] = "اسم المادة مطلوب."
+
+        if not field_errors:
+            material.code = code
+            material.name = name
+            material.section_id = section_id if section_id else None
+            material.hours = hours
+            material.description = description
+            material.save()
+            return redirect("materials_page")
+
+    return render(request, "material_detail.html", {
+        "material": material,
+        "sections": sections,
+        "field_errors": field_errors,
+        "form_data": form_data,
+    })
+
+
+
+
+
+@login_required
+def grades_entry(request):
+    # نجيب كل الطلاب اللي لهم سجلات رصد درجات
+    students_with_grades = Student.objects.filter(grade_records__isnull=False).distinct()
+
+    grade_data = []
+
+    for student in students_with_grades:
+        # نجيب السمسترات اللي رصد فيها الطالب درجاته
+        semesters = GradeRecord.objects.filter(student=student)\
+            .values_list('semester', flat=True).distinct()
+
+        grade_data.append({
+            'student': student,
+            'semesters': semesters,
+        })
+
+    context = {
+        'grade_data': grade_data
+    }
+    return render(request, 'grades_entry.html', context)
+
+
+def add_grade_entry(request):
+    student = None
+    materials = []
+
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        try:
+            # نجيب الطالب حسب رقم القيد
+            student = Student.objects.get(id_student=student_id)
+            # نجيب المواد اللي مسجلها الطالب
+            materials = Enrollment.objects.filter(student=student)
+
+            # لما المستخدم يحفظ الدرجات
+            if 'save_grades' in request.POST:
+                for enrollment in materials:
+                    grade_value = request.POST.get(f'grade_{enrollment.id}')
+                    if grade_value:
+                        grade_value = float(grade_value)
+
+                        GradeRecord.objects.update_or_create(
+                            student=student,
+                            material=enrollment.material,
+                            semester=enrollment.semester,
+                            year=enrollment.year,
+                            defaults={'grade': grade_value}
+                        )
+
+                messages.success(request, "تم حفظ الدرجات وحساب المعدلات بنجاح ✅")
+                return redirect('add_grade_entry')
+
+        except Student.DoesNotExist:
+            messages.error(request, "رقم القيد غير موجود ❌")
+            student = None
+            materials = []
+
+    context = {
+        'student': student,
+        'materials': materials
+    }
+    return render(request, 'add_grade_entry.html', context)
+
+
+def procedures_page(request):
+    return render(request, 'Procedures.html')
+
+
+
+@login_required
+def materials_download_page(request):
+    if not request.user.is_staff:
+        return redirect('login')
+
+    # جلب كل التنزيلات
+    # نرتبها حسب الطالب والسمستر والسنة
+    enrollments = Enrollment.objects.select_related('student', 'material').order_by('student__id_student', 'year', 'semester')
+
+    # تنظيم البيانات: لكل طالب نعرض السمستر والسنة وعدد المواد
+    downloads = {}
+    for e in enrollments:
+        key = (e.student.id_student, e.semester, e.year)
+        if key not in downloads:
+            downloads[key] = {
+                'student': e.student,
+                'semester': e.semester,
+                'year': e.year,
+                'materials_count': 0
+            }
+        downloads[key]['materials_count'] += 1
+
+    context = {
+        'downloads': downloads.values()
+    }
+
+    return render(request, 'materials_download.html', context)
+
+
+
+
+@login_required
+def student_material_download(request):
+    student = None
+    materials = Material.objects.all()
+
+    # البحث عن الطالب
+    student_id = request.GET.get('student_id')
+    if student_id:
+        student = get_object_or_404(Student, id_student=student_id)
+
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        student = get_object_or_404(Student, id_student=student_id)
+        selected_materials = request.POST.getlist('materials')
+
+        today = datetime.today().date()  # التاريخ الكامل
+        current_year = today.year
+        current_month = today.month
+
+        for material_id in selected_materials:
+            material = Material.objects.get(id=material_id)
+
+            # تحقق إذا الطالب لم ينزل المادة في نفس الشهر
+            exists = Enrollment.objects.filter(
+                student=student,
+                material=material,
+                date_registered__year=current_year,
+                date_registered__month=current_month
+            ).exists()
+
+            if not exists:
+                Enrollment.objects.create(
+                    student=student,
+                    material=material,
+                    semester=f"{current_month}/{current_year}",  # يمكنك تعديل الصياغة حسب رغبتك
+                    year=current_year,
+                    date_registered=today
+                )
+
+    return render(request, 'student_material_download.html', {
+        'student': student,
+        'materials': materials,
+        'now': datetime.today(),
+    })
+
+
+
+
+def edit_student_downloads(request):
+    student = None
+    materials = Material.objects.all()
+    enrollments = []
+
+    # جلب الطالب
+    student_id = request.GET.get('student_id')
+    if student_id:
+        student = get_object_or_404(Student, id_student=student_id)
+        enrollments = Enrollment.objects.filter(student=student)
+
+    # تنزيل مواد جديدة
+    if request.method == 'POST' and 'download_materials' in request.POST:
+        student_id = request.POST.get('student_id')
+        student = get_object_or_404(Student, id_student=student_id)
+        selected_materials = request.POST.getlist('materials')
+
+        today = datetime.today().date()
+        current_year = today.year
+        current_month = today.month
+
+        for material_id in selected_materials:
+            material = Material.objects.get(id=material_id)
+
+            # منع تنزيل نفس المادة أكثر من مرة في نفس الشهر
+            exists = Enrollment.objects.filter(
+                student=student,
+                material=material,
+                date_registered__year=current_year,
+                date_registered__month=current_month
+            ).exists()
+
+            if not exists:
+                Enrollment.objects.create(
+                    student=student,
+                    material=material,
+                    semester=f"{current_month}/{current_year}",
+                    year=current_year,
+                    date_registered=today
+                )
+        return redirect(f"{request.path}?student_id={student.id_student}")
+
+    # حذف مادة
+    if request.method == 'POST' and 'delete_enrollment' in request.POST:
+        enrollment_id = request.POST.get('enrollment_id')
+        enrollment = Enrollment.objects.get(id=enrollment_id)
+        enrollment.delete()
+        return redirect(f"{request.path}?student_id={student.id_student}")
+
+    return render(request, 'edit_student_downloads.html', {
+        'student': student,
+        'materials': materials,
+        'enrollments': enrollments,
+        'now': datetime.today()
+    })
+
+
+
+@login_required
+def manage_material_prerequisites(request):
+    if not request.user.is_staff:
+        return redirect('login')
+
+    all_materials = Material.objects.all()
+    all_material_names = list(all_materials.values_list('name', flat=True))
+
+    if request.method == 'POST':
+        material_names = request.POST.getlist('material_name[]')
+        prerequisites_lists = request.POST.getlist('prerequisites[]')
+
+        for mat_name, prereq_name in zip(material_names, prerequisites_lists):
+            mat_name = mat_name.strip()
+            prereq_name = prereq_name.strip()
+
+            if not mat_name:
+                continue
+
+            try:
+                material = Material.objects.get(name=mat_name)
+            except Material.DoesNotExist:
+                continue
+
+            # نحذف الأسبقيات القديمة لنفس المادة
+            MaterialPrerequisite.objects.filter(material=material).delete()
+
+            if prereq_name == "" or prereq_name == "لا يوجد":
+                MaterialPrerequisite.objects.create(material=material, prerequisite=None)
+            else:
+                try:
+                    prereq_material = Material.objects.get(name=prereq_name)
+                    if prereq_material != material:
+                        MaterialPrerequisite.objects.create(material=material, prerequisite=prereq_material)
+                except Material.DoesNotExist:
+                    continue
+
+        messages.success(request, "✅ تم حفظ أسبقيات المواد بنجاح!")
+        return redirect('manage_material_prerequisites')
+
+    # 🔹 بعد الحفظ أو عند الدخول، نعرض البيانات الحالية
+    prerequisites_data = []
+    for p in MaterialPrerequisite.objects.select_related('material', 'prerequisite'):
+        prerequisites_data.append({
+            'material': p.material.name,
+            'prerequisite': p.prerequisite.name if p.prerequisite else "لا يوجد"
+        })
+
+    context = {
+        'all_material_names': all_material_names,
+        'prerequisites_data': prerequisites_data
+    }
+    return render(request, 'manage_material_prerequisites.html', context)
+
+
+
+
+@login_required
+def timetable_page(request):
+    lectures = Lecture.objects.select_related('material').all()
+    lectures = sorted(lectures, key=lambda x: (x.time, x.day))
+
+    materials = Material.objects.all()  # جلب جميع المواد
+
+    time_slots = [0, 1, 2, 3, 4]
+    days = [1, 2, 3, 4, 5, 6]
+
+    context = {
+        'lectures': lectures,
+        'colors': ["#ef4444","#3b82f6","#10b981","#f59e0b","#6366f1","#06b6d4","#8b5cf6"],
+        'rows': time_slots,
+        'days': days,
+        'materials': materials,  # إرسال المواد للـ template
+    }
+    return render(request, 'timetable.html', context)
+
+
+
+@csrf_exempt
+def save_lecture(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            lecture_id = data.get("id")
+            material_id = data.get("material_id")  # استلمنا id المادة
+            group = data.get("group")
+            room = data.get("room")
+            day = int(data.get("day"))
+            time = int(data.get("time"))
+
+            material = Material.objects.get(id=material_id)  # جلب المادة من قاعدة البيانات
+
+            if lecture_id and int(lecture_id) > 0:
+                lecture = Lecture.objects.get(id=lecture_id)
+                lecture.material = material
+                lecture.group = group
+                lecture.room = room
+                lecture.day = day
+                lecture.time = time
+                lecture.save()
+            else:
+                Lecture.objects.create(
+                    material=material,
+                    group=group,
+                    room=room,
+                    day=day,
+                    time=time
+                )
+            return JsonResponse({"success": True})
+        except Exception as e:
+            print(e)
+            return JsonResponse({"success": False, "error": str(e)})
+    return JsonResponse({"success": False})
